@@ -20,50 +20,68 @@ class AkwaSeeder extends Seeder
         );
 
         Parametre::query()->updateOrCreate(['id' => 1], [
-            'nom_evenement' => 'AKWABA STIC 25',
-            'message_accueil' => 'Bienvenue ! Votez pour vos talents préférés de la soirée STIC.',
-            'date_debut_vote' => now()->subDay(),
-            'date_fin_vote' => now()->addDays(7),
-            'votes_ouverts' => true,
+            'nom_evenement'           => 'AKWABA STIC 25',
+            'message_accueil'         => 'Bienvenue ! Votez pour vos talents préférés de la soirée STIC.',
+            'date_debut_vote'         => now()->subDay(),
+            'date_fin_vote'           => now()->addDays(7),
+            'votes_ouverts'           => true,
+            'afficher_resultats_live' => true,
+            'afficher_nb_votes'       => true,
+            'couleur_primaire'        => '#cc0000',
+            'couleur_secondaire'      => '#b8960c',
         ]);
 
         $talentsData = [
-            ['nom' => 'Meilleur Danseur', 'ordre' => 1],
-            ['nom' => 'Filleul le plus élégant', 'ordre' => 2],
-            ['nom' => 'Meilleur Performer', 'ordre' => 3],
+            ['nom' => 'Meilleur Danseur', 'description' => 'La star de la piste de danse', 'ordre' => 1, 'couleur_hex' => '#cc0000'],
+            ['nom' => 'Filleul le plus élégant', 'description' => 'Style et classe au rendez-vous', 'ordre' => 2, 'couleur_hex' => '#b8960c'],
+            ['nom' => 'Meilleur Performer', 'description' => 'Scène, charisme et performance', 'ordre' => 3, 'couleur_hex' => '#6d28d9'],
         ];
 
         $noms = [
-            ['Kofi Mensah', 'Ama Diallo', 'Jean-Paul N\'Guessan'],
-            ['Sarah Koné', 'Ibrahim Touré', 'Grace Ahou'],
-            ['Michel Bamba', 'Fatou Soro', 'David Kacou'],
+            [
+                ['nom' => 'Kofi Mensah',        'slogan' => 'Le groove est en moi',      'genre' => 'M'],
+                ['nom' => 'Ama Diallo',          'slogan' => 'La danse, c\'est ma vie',   'genre' => 'F'],
+                ['nom' => "Jean-Paul N'Guessan", 'slogan' => 'Chaque pas est un message', 'genre' => 'M'],
+            ],
+            [
+                ['nom' => 'Sarah Koné',   'slogan' => 'L\'élégance sans effort', 'genre' => 'F'],
+                ['nom' => 'Ibrahim Touré','slogan' => 'Style africain moderne',   'genre' => 'M'],
+                ['nom' => 'Grace Ahou',   'slogan' => 'La classe incarnée',       'genre' => 'F'],
+            ],
+            [
+                ['nom' => 'Michel Bamba', 'slogan' => 'La scène m\'appartient',  'genre' => 'M'],
+                ['nom' => 'Fatou Soro',   'slogan' => 'Performance et passion',  'genre' => 'F'],
+                ['nom' => 'David Kacou',  'slogan' => 'L\'art de se surpasser',  'genre' => 'M'],
+            ],
         ];
 
         foreach ($talentsData as $i => $data) {
             $talent = Talent::query()->updateOrCreate(
                 ['nom' => $data['nom']],
-                ['votes_actifs' => true, 'ordre' => $data['ordre']]
+                array_merge($data, ['votes_actifs' => true, 'max_votes_par_ip' => 1])
             );
 
-            foreach ($noms[$i] as $nom) {
+            foreach ($noms[$i] as $ordre => $candidatData) {
                 Candidat::query()->firstOrCreate(
-                    ['talent_id' => $talent->id, 'nom_complet' => $nom]
+                    ['talent_id' => $talent->id, 'nom_complet' => $candidatData['nom']],
+                    ['slogan' => $candidatData['slogan'], 'genre' => $candidatData['genre'], 'ordre' => $ordre, 'is_active' => true]
                 );
             }
         }
 
         $session = 'demo-seed-session';
-
         foreach (Candidat::with('talent')->get() as $index => $candidat) {
             if ($index % 2 === 0) {
                 Vote::query()->create([
-                    'talent_id' => $candidat->talent_id,
-                    'candidat_id' => $candidat->id,
-                    'session_id' => $session.'-'.$candidat->talent_id,
-                    'ip_address' => '127.0.0.1',
-                    'user_agent' => 'Seeder',
-                    'is_valid' => true,
-                    'created_at' => now()->subMinutes(rand(1, 120)),
+                    'talent_id'       => $candidat->talent_id,
+                    'candidat_id'     => $candidat->id,
+                    'session_id'      => $session.'-'.$candidat->talent_id,
+                    'ip_address'      => '127.0.0.1',
+                    'user_agent'      => 'Seeder',
+                    'score_confiance' => 100,
+                    'is_valid'        => true,
+                    'is_flagged'      => false,
+                    'created_at'      => now()->subMinutes(rand(1, 120)),
                 ]);
             }
         }

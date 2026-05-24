@@ -16,7 +16,10 @@ class TalentController extends Controller
 
     public function index(): View
     {
-        $talents = Talent::withCount('candidats')->orderBy('ordre')->get();
+        $talents = Talent::withCount('candidats')
+            ->withCount(['votes as votes_count' => fn ($q) => $q->where('is_valid', true)->where('is_flagged', false)])
+            ->orderBy('ordre')
+            ->get();
 
         return view('admin.talents.index', compact('talents'));
     }
@@ -56,5 +59,20 @@ class TalentController extends Controller
         $this->resultats->clearCache();
 
         return back()->with('status', 'Talent supprimé.');
+    }
+
+    public function reorder(Talent $talent, string $direction): RedirectResponse
+    {
+        $swap = Talent::where('ordre', $direction === 'up' ? '<' : '>', $talent->ordre)
+            ->orderBy('ordre', $direction === 'up' ? 'desc' : 'asc')
+            ->first();
+
+        if ($swap) {
+            [$talent->ordre, $swap->ordre] = [$swap->ordre, $talent->ordre];
+            $talent->save();
+            $swap->save();
+        }
+
+        return back()->with('status', 'Ordre mis à jour.');
     }
 }

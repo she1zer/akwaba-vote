@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Candidat;
 use App\Models\Parametre;
 use App\Models\Talent;
 use App\Models\Vote;
@@ -17,9 +18,10 @@ class AdminController extends Controller
     {
         $parametres = Parametre::current();
         $stats = [
-            'talents' => Talent::count(),
-            'candidats' => \App\Models\Candidat::count(),
-            'votes' => Vote::where('is_valid', true)->count(),
+            'talents'       => Talent::count(),
+            'candidats'     => Candidat::count(),
+            'votes'         => Vote::where('is_valid', true)->where('is_flagged', false)->count(),
+            'votes_flagges' => Vote::where('is_flagged', true)->count(),
         ];
         $live = $this->resultats->hasRecentVotes();
         $recentVotes = Vote::with(['candidat', 'talent'])

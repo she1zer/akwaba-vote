@@ -19,14 +19,23 @@ class ParametreController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'nom_evenement' => ['required', 'string', 'max:150'],
-            'message_accueil' => ['nullable', 'string', 'max:2000'],
-            'date_debut_vote' => ['nullable', 'date'],
-            'date_fin_vote' => ['nullable', 'date', 'after_or_equal:date_debut_vote'],
-            'votes_ouverts' => ['sometimes', 'boolean'],
+            'nom_evenement'         => ['required', 'string', 'max:150'],
+            'message_accueil'       => ['nullable', 'string', 'max:2000'],
+            'date_debut_vote'       => ['nullable', 'date'],
+            'date_fin_vote'         => ['nullable', 'date', 'after_or_equal:date_debut_vote'],
+            'votes_ouverts'         => ['sometimes', 'boolean'],
+            'afficher_resultats_live' => ['sometimes', 'boolean'],
+            'afficher_nb_votes'     => ['sometimes', 'boolean'],
+            'couleur_primaire'      => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'couleur_secondaire'    => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'lien_facebook'         => ['nullable', 'url', 'max:255'],
+            'lien_instagram'        => ['nullable', 'url', 'max:255'],
+            'reglement'             => ['nullable', 'string', 'max:5000'],
         ]);
 
-        $data['votes_ouverts'] = $request->boolean('votes_ouverts');
+        $data['votes_ouverts']           = $request->boolean('votes_ouverts');
+        $data['afficher_resultats_live'] = $request->boolean('afficher_resultats_live');
+        $data['afficher_nb_votes']       = $request->boolean('afficher_nb_votes');
 
         foreach (['date_debut_vote', 'date_fin_vote'] as $field) {
             if (! empty($data[$field])) {
@@ -53,7 +62,7 @@ class ParametreController extends Controller
     {
         $talent->votes()->delete();
         app(\App\Services\ResultatService::class)->clearCache();
-        AdminLogger::log('votes.reset', 'Talent #'.$talent->id);
+        AdminLogger::log('votes.reset', 'Talent #'.$talent->id.' '.$talent->nom);
 
         return back()->with('status', 'Votes réinitialisés pour '.$talent->nom.'.');
     }

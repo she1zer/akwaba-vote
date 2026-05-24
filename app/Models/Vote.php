@@ -10,19 +10,18 @@ class Vote extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'talent_id',
-        'candidat_id',
-        'session_id',
-        'ip_address',
-        'user_agent',
-        'is_valid',
-        'created_at',
+        'talent_id', 'candidat_id', 'session_id',
+        'ip_address', 'user_agent', 'device_fingerprint',
+        'is_valid', 'is_flagged', 'flag_reason',
+        'score_confiance', 'pays', 'created_at',
     ];
 
     protected function casts(): array
     {
         return [
             'is_valid' => 'boolean',
+            'is_flagged' => 'boolean',
+            'score_confiance' => 'integer',
             'created_at' => 'datetime',
         ];
     }
@@ -35,5 +34,15 @@ class Vote extends Model
     public function candidat(): BelongsTo
     {
         return $this->belongsTo(Candidat::class);
+    }
+
+    public function scopeValides($query)
+    {
+        return $query->where('is_valid', true)->where('is_flagged', false);
+    }
+
+    public function scopeFlagges($query)
+    {
+        return $query->where('is_flagged', true);
     }
 }

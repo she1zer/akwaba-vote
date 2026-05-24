@@ -13,14 +13,16 @@ class CandidatRequest extends FormRequest
 
     public function rules(): array
     {
-        $photoRule = $this->isMethod('post')
-            ? ['required', 'image', 'mimes:jpeg,png,webp', 'max:2048']
-            : ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:2048'];
-
         return [
-            'talent_id' => ['required', 'integer', 'exists:talents,id'],
-            'nom_complet' => ['required', 'string', 'max:120', 'regex:/^[\pL\s\'\-\.]+$/u'],
-            'photo' => $photoRule,
+            'talent_id'     => ['required', 'exists:talents,id'],
+            'nom_complet'   => ['required', 'string', 'max:100'],
+            'slogan'        => ['nullable', 'string', 'max:200'],
+            'bio'           => ['nullable', 'string', 'max:1000'],
+            'genre'         => ['nullable', 'in:M,F,autre'],
+            'contact_email' => ['nullable', 'email', 'max:150'],
+            'ordre'         => ['nullable', 'integer', 'min:0'],
+            'is_active'     => ['sometimes', 'boolean'],
+            'photo'         => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ];
     }
 }

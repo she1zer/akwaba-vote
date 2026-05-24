@@ -9,10 +9,17 @@
         <path d="M50 5 L62 35 L95 38 L70 58 L78 92 L50 75 L22 92 L30 58 L5 38 L38 35 Z" fill="#b8960c" stroke="#cc0000"/>
     </svg>
     <p class="text-mafia-gold font-semibold">Merci ! Votre vote a été enregistré.</p>
+    <p class="text-mafia-muted text-sm">Montrez votre soutien avec une réaction 👇</p>
 </div>
 @endif
 
 <h1 class="font-display text-3xl mb-6 text-center">Résultats en direct</h1>
+
+@if($parametres->date_fin_vote && $parametres->votesAreOpen())
+<p class="text-center text-mafia-muted text-sm mb-6">
+    ⏳ Votes se ferment dans <strong class="text-mafia-gold">{{ $parametres->tempsRestant() }}</strong>
+</p>
+@endif
 
 <nav class="flex flex-wrap gap-2 justify-center mb-8" aria-label="Filtrer par talent">
     @foreach($talents as $t)
@@ -29,6 +36,7 @@
         <h2 class="font-display text-2xl mb-6 text-mafia-red-bright">{{ $block['nom'] }}</h2>
 
         @php $candidats = collect($block['candidats']); $top3 = $candidats->take(3); @endphp
+
         @if($top3->count())
         <div class="flex justify-center items-end gap-4 mb-10" aria-label="Podium top 3">
             @foreach([1 => 0, 0 => 1, 2 => 2] as $pos => $idx)
@@ -53,31 +61,101 @@
         </div>
         @endif
 
-        <div class="card-mafia p-6">
-            <svg viewBox="0 0 800 300" class="w-full h-auto" role="img" aria-label="Diagramme des votes pour {{ $block['nom'] }}">
-                @php $maxVotes = max(1, $candidats->max('votes') ?? 1); $barW = min(80, 700 / max(1, $candidats->count())); @endphp
-                @foreach($candidats as $i => $c)
-                    @php
-                        $h = ($c['votes'] / $maxVotes) * 200;
-                        $x = 40 + $i * ($barW + 20);
-                    @endphp
-                    <g>
-                        @if($c['photo'])
-                            <image href="{{ $c['photo'] }}" x="{{ $x + $barW/2 - 20 }}" y="10" width="40" height="40" clip-path="circle(50%)"/>
-                        @else
-                            <circle cx="{{ $x + $barW/2 }}" cy="30" r="20" fill="#1a1a1a" stroke="#b8960c"/>
-                            <text x="{{ $x + $barW/2 }}" y="35" text-anchor="middle" fill="#b8960c" font-size="12">{{ $c['initials'] }}</text>
-                        @endif
-                        <rect x="{{ $x }}" y="{{ 280 - $h }}" width="{{ $barW }}" height="{{ $h }}" fill="#cc0000" class="bar-grow" style="animation-delay: {{ $i * 0.1 }}s">
-                            <title>{{ $c['nom'] }}: {{ $c['votes'] }} votes ({{ $c['percent'] }}%)</title>
-                        </rect>
-                        <text x="{{ $x + $barW/2 }}" y="295" text-anchor="middle" fill="#888" font-size="10">{{ \Illuminate\Support\Str::limit($c['nom'], 12) }}</text>
-                        <text x="{{ $x + $barW/2 }}" y="{{ 270 - $h }}" text-anchor="middle" fill="#f0f0f0" font-size="11">{{ $c['votes'] }} ({{ $c['percent'] }}%)</text>
-                    </g>
-                @endforeach
-            </svg>
+        {{-- Barres --}}
+        <div class="card-mafia p-6 mb-6">
+            @if($parametres->afficher_nb_votes)
+            <p class="text-xs text-mafia-muted mb-3 text-right">{{ $block['total_votes'] }} vote(s) au total</p>
+            @endif
+            @foreach($candidats as $c)
+            <div class="mb-3">
+                <div class="flex justify-between text-sm mb-1">
+                    <span>{{ $c['nom'] }}</span>
+                    <span class="text-mafia-muted">
+                        @if($parametres->afficher_nb_votes){{ $c['votes'] }} vote(s) — @endif{{ $c['percent'] }}%
+                    </span>
+                </div>
+                <div class="h-3 rounded bg-mafia-soft overflow-hidden">
+                    <div class="h-full bg-mafia-red bar-grow transition-all" style="width: {{ $c['percent'] }}%"></div>
+                </div>
+            </div>
+            @endforeach
         </div>
+
+        {{-- Réactions --}}
+        @if($voteSuccess)
+        <div class="card-mafia p-4 text-center">
+            <p class="text-sm text-mafia-muted mb-3">Réagissez pour votre candidat favori !</p>
+            <div class="flex justify-center gap-6 flex-wrap">
+                @foreach($candidats->take(3) as $c)
+                <div class="flex flex-col items-center gap-2">
+                    <span class="text-sm text-mafia-muted">{{ \Illuminate\Support\Str::limit($c['nom'], 15) }}</span>
+                    <div class="flex gap-2" data-candidat="{{ $c['id'] }}">
+                        @foreach(['coeur' => '❤️', 'feu' => '🔥', 'star' => '⭐', 'clap' => '👏'] as $type => $emoji)
+                        <button onclick="sendReaction({{ $c['id'] }}, '{{ $type }}')"
+                                class="reaction-btn text-xl hover:scale-125 transition-transform p-1"
+                                data-type="{{ $type }}" title="{{ $type }}">
+                            {{ $emoji }}
+                            <span class="text-xs text-mafia-muted block" id="reaction-{{ $c['id'] }}-{{ $type }}">
+                                {{ $c['reactions'][$type] ?? 0 }}
+                            </span>
+                        </button>
+                        @endforeach
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
     </section>
 @endforeach
 </div>
+
+{{-- Partage --}}
+<div class="mt-8 text-center">
+    <p class="text-mafia-muted text-sm mb-3">Partagez la plateforme de vote</p>
+    <div class="flex justify-center gap-3 flex-wrap">
+        @if($parametres->lien_facebook)
+        <a href="{{ $parametres->lien_facebook }}" target="_blank" rel="noopener"
+           class="btn-mafia text-sm bg-transparent border-blue-700 text-blue-400 hover:bg-blue-900/10">
+            Facebook
+        </a>
+        @endif
+        @if($parametres->lien_instagram)
+        <a href="{{ $parametres->lien_instagram }}" target="_blank" rel="noopener"
+           class="btn-mafia text-sm bg-transparent border-pink-700 text-pink-400 hover:bg-pink-900/10">
+            Instagram
+        </a>
+        @endif
+        <button onclick="copyLink()" class="btn-mafia text-sm bg-transparent border-mafia-border text-mafia-muted">
+            🔗 Copier le lien
+        </button>
+    </div>
+</div>
+
+<script>
+function sendReaction(candidatId, type) {
+    fetch('/candidat/' + candidatId + '/reaction', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        },
+        body: JSON.stringify({ type })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.counts) {
+            Object.entries(data.counts).forEach(([t, n]) => {
+                const el = document.getElementById('reaction-' + candidatId + '-' + t);
+                if (el) el.textContent = n;
+            });
+        }
+    });
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.origin + '/resultats')
+        .then(() => alert('Lien copié !'));
+}
+</script>
 @endsection
