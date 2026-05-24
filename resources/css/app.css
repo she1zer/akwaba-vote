@@ -1,0 +1,99 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --color-mafia-black: #0a0a0a;
+    --color-mafia-soft: #111111;
+    --color-mafia-card: #1a1a1a;
+    --color-mafia-red: #cc0000;
+    --color-mafia-red-bright: #ff2222;
+    --color-mafia-gold: #b8960c;
+    --color-mafia-text: #f0f0f0;
+    --color-mafia-muted: #888888;
+    --color-mafia-border: #2a2a2a;
+}
+
+@layer base {
+    body {
+        @apply bg-mafia-black text-mafia-text font-sans antialiased;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    }
+
+    h1, h2, h3, .font-display {
+        font-family: var(--font-display);
+    }
+}
+
+@layer components {
+    .card-mafia {
+        @apply bg-mafia-card border border-mafia-border rounded-lg transition-all duration-300;
+    }
+
+    .card-mafia:hover {
+        @apply border-mafia-red shadow-[0_0_20px_rgba(204,0,0,0.35)];
+    }
+
+    .btn-mafia {
+        @apply inline-flex items-center justify-center min-h-12 min-w-12 px-6 py-3 bg-mafia-red text-white font-semibold rounded border border-mafia-red-bright/50 transition-all duration-200;
+    }
+
+    .btn-mafia:hover {
+        @apply bg-mafia-red-bright shadow-[0_0_16px_rgba(255,34,34,0.5)];
+    }
+
+    .btn-outline-mafia {
+        @apply inline-flex items-center justify-center min-h-12 px-6 py-3 border border-mafia-border text-mafia-text rounded transition-all;
+    }
+
+    .btn-outline-mafia:hover {
+        @apply border-mafia-red text-mafia-red-bright;
+    }
+
+    .glow-pulse {
+        animation: glowPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+        0%, 100% { box-shadow: 0 0 12px rgba(204, 0, 0, 0.4); }
+        50% { box-shadow: 0 0 28px rgba(255, 34, 34, 0.7); }
+    }
+
+    .pulse-vote {
+        animation: votePulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes votePulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .bar-grow {
+        transform-origin: bottom;
+        animation: barGrow 1s ease-out forwards;
+    }
+
+    @keyframes barGrow {
+        from { transform: scaleY(0); }
+        to { transform: scaleY(1); }
+    }
+
+    .live-dot {
+        animation: liveBlink 1s step-end infinite;
+    }
+
+    @keyframes liveBlink {
+        50% { opacity: 0.3; }
+    }
+}
+
+@media print {
+    body { background: white !important; color: black !important; }
+    .no-print { display: none !important; }
+    .print-only { display: block !important; }
+}
