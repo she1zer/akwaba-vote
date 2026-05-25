@@ -67,3 +67,14 @@ class ParametreController extends Controller
         return back()->with('status', 'Votes réinitialisés pour '.$talent->nom.'.');
     }
 }
+
+
+    public function resetCache(): \Illuminate\Http\RedirectResponse
+    {
+        \Illuminate\Support\Facades\RateLimiter::clear('');
+        \Illuminate\Support\Facades\Cache::flush();
+        app(\App\Services\ResultatService::class)->clearCache();
+        AdminLogger::log('cache.reset', 'Cache et rate limiter vidés');
+
+        return back()->with('status', 'Cache vidé avec succès.');
+    }

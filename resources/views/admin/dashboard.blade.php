@@ -43,6 +43,12 @@
     <a href="{{ route('admin.statistiques') }}" class="btn-mafia text-sm bg-transparent border-mafia-border hover:border-mafia-gold">
         📊 Statistiques
     </a>
+    <form method="POST" action="{{ route('admin.cache.reset') }}">
+        @csrf
+        <button class="btn-mafia text-sm bg-transparent border-mafia-border hover:border-mafia-gold">
+            🔄 Vider le cache
+        </button>
+    </form>
     <a href="{{ route('admin.export.csv') }}" class="btn-mafia text-sm bg-transparent border-mafia-border hover:border-mafia-gold">
         ⬇ CSV résultats
     </a>

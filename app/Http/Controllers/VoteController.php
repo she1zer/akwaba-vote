@@ -12,7 +12,6 @@ use App\Services\ResultatService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 
 class VoteController extends Controller
@@ -48,28 +47,35 @@ class VoteController extends Controller
             return redirect()->route('home');
         }
 
-        $candidat = Candidat::query()->where('is_active', true)->findOrFail($request->validated('candidat_id'));
+        $candidat = Candidat::query()
+            ->where('is_active', true)
+            ->where('statut', 'valide')
+            ->findOrFail($request->validated('candidat_id'));
 
         if ($candidat->talent_id !== $talent->id) {
             abort(422);
         }
 
+        // Vérification vote unique : par session ET par cookie
         if ($this->hasVoted($talent->id)) {
             return redirect()->route('resultats', ['talent' => $talent->id]);
         }
 
-        $key = 'vote:'.$request->ip().':'.$talent->id;
+        // Vérification vote unique en base (protection supplémentaire)
+        $dejaVote = Vote::where('talent_id', $talent->id)
+            ->where('session_id', session()->getId())
+            ->where('is_valid', true)
+            ->exists();
 
-        if (RateLimiter::tooManyAttempts($key, $talent->max_votes_par_ip ?? 1)) {
-            return back()->withErrors(['vote' => 'Trop de tentatives. Réessayez dans quelques minutes.']);
+        if ($dejaVote) {
+            session()->push('voted_talents', $talent->id);
+            return redirect()->route('resultats', ['talent' => $talent->id])
+                ->with('status', 'Vous avez déjà voté pour ce talent.');
         }
 
-        RateLimiter::hit($key, 600);
-
         // Détection fraude
-        $score = $this->fraude->calculerScore($request, $talent->id);
+        $score     = $this->fraude->calculerScore($request, $talent->id);
         $isFlagged = $this->fraude->doitFlaguer($score);
-        $flagReason = $isFlagged ? 'score_confiance_bas' : null;
 
         Vote::query()->create([
             'talent_id'          => $talent->id,
@@ -80,21 +86,20 @@ class VoteController extends Controller
             'device_fingerprint' => $request->input('_fp'),
             'is_valid'           => true,
             'is_flagged'         => $isFlagged,
-            'flag_reason'        => $flagReason,
+            'flag_reason'        => $isFlagged ? 'score_confiance_bas' : null,
             'score_confiance'    => $score,
             'created_at'         => now(),
         ]);
 
-        $voted = json_decode($request->cookie('akwa_voted', '[]'), true) ?: [];
-        $voted[] = $talent->id;
-        $voted = array_values(array_unique($voted));
-
+        // Marquer comme voté (session + cookie)
         session()->push('voted_talents', $talent->id);
         session()->put('vote_success', true);
 
-        $this->resultats->clearCache();
+        $voted   = json_decode($request->cookie('akwa_voted', '[]'), true) ?: [];
+        $voted[] = $talent->id;
+        Cookie::queue('akwa_voted', json_encode(array_values(array_unique($voted))), 60 * 24 * 30);
 
-        Cookie::queue('akwa_voted', json_encode($voted), 60 * 24 * 30);
+        $this->resultats->clearCache();
 
         return redirect()->route('resultats', ['talent' => $talent->id, 'voted' => 1]);
     }

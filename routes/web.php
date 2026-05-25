@@ -59,6 +59,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Paramètres
         Route::get('parametres', [ParametreController::class, 'edit'])->name('parametres.edit');
         Route::put('parametres', [ParametreController::class, 'update'])->name('parametres.update');
+        Route::post('cache/reset', [ParametreController::class, 'resetCache'])->name('cache.reset');
         Route::post('votes/toggle', [ParametreController::class, 'toggleVotes'])->name('votes.toggle');
 
         // QR Code
