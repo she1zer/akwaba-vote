@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Parametre;
 use App\Services\AdminLogger;
+use App\Services\ResultatService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 
 class ParametreController extends Controller
@@ -19,18 +22,18 @@ class ParametreController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'nom_evenement'         => ['required', 'string', 'max:150'],
-            'message_accueil'       => ['nullable', 'string', 'max:2000'],
-            'date_debut_vote'       => ['nullable', 'date'],
-            'date_fin_vote'         => ['nullable', 'date', 'after_or_equal:date_debut_vote'],
-            'votes_ouverts'         => ['sometimes', 'boolean'],
+            'nom_evenement'           => ['required', 'string', 'max:150'],
+            'message_accueil'         => ['nullable', 'string', 'max:2000'],
+            'date_debut_vote'         => ['nullable', 'date'],
+            'date_fin_vote'           => ['nullable', 'date', 'after_or_equal:date_debut_vote'],
+            'votes_ouverts'           => ['sometimes', 'boolean'],
             'afficher_resultats_live' => ['sometimes', 'boolean'],
-            'afficher_nb_votes'     => ['sometimes', 'boolean'],
-            'couleur_primaire'      => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'couleur_secondaire'    => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'lien_facebook'         => ['nullable', 'url', 'max:255'],
-            'lien_instagram'        => ['nullable', 'url', 'max:255'],
-            'reglement'             => ['nullable', 'string', 'max:5000'],
+            'afficher_nb_votes'       => ['sometimes', 'boolean'],
+            'couleur_primaire'        => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'couleur_secondaire'      => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'lien_facebook'           => ['nullable', 'url', 'max:255'],
+            'lien_instagram'          => ['nullable', 'url', 'max:255'],
+            'reglement'               => ['nullable', 'string', 'max:5000'],
         ]);
 
         $data['votes_ouverts']           = $request->boolean('votes_ouverts');
@@ -49,7 +52,7 @@ class ParametreController extends Controller
         return back()->with('status', 'Paramètres enregistrés.');
     }
 
-    public function toggleVotes(Request $request): RedirectResponse
+    public function toggleVotes(): RedirectResponse
     {
         $parametres = Parametre::current();
         $parametres->update(['votes_ouverts' => ! $parametres->votes_ouverts]);
@@ -61,20 +64,18 @@ class ParametreController extends Controller
     public function resetTalentVotes(\App\Models\Talent $talent): RedirectResponse
     {
         $talent->votes()->delete();
-        app(\App\Services\ResultatService::class)->clearCache();
+        app(ResultatService::class)->clearCache();
         AdminLogger::log('votes.reset', 'Talent #'.$talent->id.' '.$talent->nom);
 
         return back()->with('status', 'Votes réinitialisés pour '.$talent->nom.'.');
     }
-}
 
-
-    public function resetCache(): \Illuminate\Http\RedirectResponse
+    public function resetCache(): RedirectResponse
     {
-        \Illuminate\Support\Facades\RateLimiter::clear('');
-        \Illuminate\Support\Facades\Cache::flush();
-        app(\App\Services\ResultatService::class)->clearCache();
-        AdminLogger::log('cache.reset', 'Cache et rate limiter vidés');
+        Cache::flush();
+        app(ResultatService::class)->clearCache();
+        AdminLogger::log('cache.reset', 'Cache vidé');
 
-        return back()->with('status', 'Cache vidé avec succès.');
+        return back()->with('status', '🔄 Cache vidé avec succès. Les voteurs bloqués peuvent à nouveau voter.');
     }
+}
