@@ -35,11 +35,13 @@
             <div>
                 <label class="block text-sm text-mafia-muted mb-1">Couleur</label>
                 <div class="flex gap-2 items-center">
-                    <input type="color" name="couleur_hex" value="{{ old('couleur_hex', $talent->couleur_hex ?? '#cc0000') }}"
+                    <input type="color" name="couleur_hex" id="couleur_pick"
+                           value="{{ old('couleur_hex', $talent->couleur_hex ?? '#cc0000') }}"
                            class="w-10 h-9 rounded border border-mafia-border bg-mafia-soft cursor-pointer">
-                    <input type="text" id="couleur_txt" value="{{ old('couleur_hex', $talent->couleur_hex ?? '#cc0000') }}"
+                    <input type="text" id="couleur_txt"
+                           value="{{ old('couleur_hex', $talent->couleur_hex ?? '#cc0000') }}"
                            class="flex-1 bg-mafia-soft border border-mafia-border rounded px-2 py-2 text-sm font-mono"
-                           oninput="document.querySelector('[name=couleur_hex]').value=this.value">
+                           oninput="document.getElementById('couleur_pick').value=this.value">
                 </div>
             </div>
             <div>
@@ -51,18 +53,33 @@
 
         <div>
             <label class="block text-sm text-mafia-muted mb-1">Max votes par IP</label>
-            <input type="number" name="max_votes_par_ip" value="{{ old('max_votes_par_ip', $talent->max_votes_par_ip ?? 1) }}"
+            <input type="number" name="max_votes_par_ip"
+                   value="{{ old('max_votes_par_ip', $talent->max_votes_par_ip ?? 1) }}"
                    min="1" max="10"
                    class="w-full bg-mafia-soft border border-mafia-border rounded px-3 py-2 text-sm">
             <p class="text-xs text-mafia-muted mt-1">Nombre de votes autorisés par adresse IP pour ce talent</p>
         </div>
 
-        <div class="flex items-center gap-2">
-            <input type="hidden" name="votes_actifs" value="0">
-            <input type="checkbox" name="votes_actifs" value="1" id="votes_actifs"
-                   {{ old('votes_actifs', $talent->votes_actifs ?? true) ? 'checked' : '' }}
-                   class="accent-mafia-red">
-            <label for="votes_actifs" class="text-sm">Votes actifs pour ce talent</label>
+        {{-- Options booléennes --}}
+        <div class="space-y-3 pt-2 border-t border-mafia-border">
+            <div class="flex items-center gap-2">
+                <input type="hidden" name="votes_actifs" value="0">
+                <input type="checkbox" name="votes_actifs" value="1" id="votes_actifs"
+                       {{ old('votes_actifs', $talent->votes_actifs ?? true) ? 'checked' : '' }}
+                       class="accent-mafia-red w-4 h-4">
+                <label for="votes_actifs" class="text-sm">Votes actifs pour ce talent</label>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <input type="hidden" name="allow_candidature_spontanee" value="0">
+                <input type="checkbox" name="allow_candidature_spontanee" value="1" id="allow_candidature_spontanee"
+                       {{ old('allow_candidature_spontanee', $talent->allow_candidature_spontanee ?? false) ? 'checked' : '' }}
+                       class="accent-mafia-red w-4 h-4">
+                <label for="allow_candidature_spontanee" class="text-sm">
+                    Autoriser les voteurs à proposer un candidat
+                    <span class="block text-xs text-mafia-muted">Les propositions devront être validées en modération avant d'apparaître</span>
+                </label>
+            </div>
         </div>
 
         <div class="flex gap-3 pt-2 border-t border-mafia-border">
@@ -77,7 +94,7 @@
 </div>
 
 <script>
-document.querySelector('[name=couleur_hex]').addEventListener('input', function() {
+document.getElementById('couleur_pick').addEventListener('input', function() {
     document.getElementById('couleur_txt').value = this.value;
 });
 </script>

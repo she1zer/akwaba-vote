@@ -18,12 +18,16 @@ class Candidat extends Model
     protected $fillable = [
         'talent_id', 'nom_complet', 'slug', 'bio', 'slogan',
         'genre', 'contact_email', 'photo', 'photo_thumb',
-        'ordre', 'is_active',
+        'ordre', 'is_active', 'statut',
+        'propose_par_ip', 'propose_par_session', 'propose_le', 'note_admin',
     ];
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return [
+            'is_active'   => 'boolean',
+            'propose_le'  => 'datetime',
+        ];
     }
 
     protected static function booted(): void
@@ -34,6 +38,8 @@ class Candidat extends Model
             }
         });
     }
+
+    // ── Relations ─────────────────────────────────────────────────────────────
 
     public function talent(): BelongsTo
     {
@@ -49,6 +55,25 @@ class Candidat extends Model
     {
         return $this->hasMany(Reaction::class);
     }
+
+    // ── Scopes ────────────────────────────────────────────────────────────────
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeValides($query)
+    {
+        return $query->where('statut', 'valide')->where('is_active', true);
+    }
+
+    public function scopeEnAttente($query)
+    {
+        return $query->where('statut', 'en_attente');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     public function validVotesCount(): int
     {
@@ -80,11 +105,18 @@ class Candidat extends Model
     public function initials(): string
     {
         $parts = preg_split('/\s+/', trim($this->nom_complet)) ?: [];
-        return Str::upper(collect($parts)->take(2)->map(fn ($p) => Str::substr($p, 0, 1))->implode(''));
+        return Str::upper(
+            collect($parts)->take(2)->map(fn ($p) => Str::substr($p, 0, 1))->implode('')
+        );
     }
 
-    public function scopeActive($query)
+    public function isValide(): bool
     {
-        return $query->where('is_active', true);
+        return $this->statut === 'valide';
+    }
+
+    public function isEnAttente(): bool
+    {
+        return $this->statut === 'en_attente';
     }
 }

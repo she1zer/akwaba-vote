@@ -9,6 +9,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-mafia-black flex">
+    @php
+        $nbEnAttente = \App\Models\Candidat::where('statut', 'en_attente')->count();
+    @endphp
+
     <aside class="w-64 bg-black border-r border-mafia-border flex-shrink-0 hidden md:flex flex-col">
         <div class="p-6 border-b border-mafia-border">
             <p class="font-display text-xl text-mafia-red">Admin</p>
@@ -18,6 +22,15 @@
             <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.dashboard') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">Dashboard</a>
             <a href="{{ route('admin.talents.index') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.talents.*') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">Talents</a>
             <a href="{{ route('admin.candidats.index') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.candidats.*') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">Candidats</a>
+
+            {{-- Modération avec badge si candidatures en attente --}}
+            <a href="{{ route('admin.moderation') }}" class="flex items-center justify-between px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.moderation*') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">
+                <span>🛡 Modération</span>
+                @if($nbEnAttente > 0)
+                <span class="text-xs bg-mafia-red text-white rounded-full px-2 py-0.5 font-bold">{{ $nbEnAttente }}</span>
+                @endif
+            </a>
+
             <a href="{{ route('admin.statistiques') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.statistiques*') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">📊 Statistiques</a>
             <a href="{{ route('admin.parametres.edit') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.parametres.*') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">Paramètres</a>
             <a href="{{ route('admin.qrcode') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.qrcode') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">QR Code</a>
@@ -37,15 +50,20 @@
     <div class="flex-1 flex flex-col min-w-0">
         <header class="bg-mafia-soft border-b border-mafia-border px-6 py-4 flex flex-wrap gap-3 items-center justify-between no-print">
             <h1 class="font-display text-xl">@yield('page-title', 'Dashboard')</h1>
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-2 items-center">
+                @if($nbEnAttente > 0)
+                <a href="{{ route('admin.moderation') }}" class="flex items-center gap-2 text-sm text-mafia-gold border border-mafia-gold/40 rounded px-3 py-1.5 hover:bg-mafia-gold/10 transition">
+                    ⏳ {{ $nbEnAttente }} candidature(s) à modérer
+                </a>
+                @endif
                 <a href="{{ route('admin.qrcode') }}" class="btn-outline-mafia text-sm">📱 QR Code</a>
                 <a href="{{ route('resultats') }}" target="_blank" rel="noopener" class="btn-mafia text-sm relative">
                     📊 Voir les Résultats
                     @if($live ?? false)
-                        <span class="absolute -top-2 -right-2 flex items-center gap-1 bg-black border border-mafia-red px-2 py-0.5 text-xs rounded-full">
-                            <span class="w-2 h-2 bg-mafia-red-bright rounded-full live-dot" aria-hidden="true"></span>
-                            LIVE
-                        </span>
+                    <span class="absolute -top-2 -right-2 flex items-center gap-1 bg-black border border-mafia-red px-2 py-0.5 text-xs rounded-full">
+                        <span class="w-2 h-2 bg-mafia-red-bright rounded-full live-dot" aria-hidden="true"></span>
+                        LIVE
+                    </span>
                     @endif
                 </a>
             </div>

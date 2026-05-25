@@ -4,7 +4,7 @@
 
 @section('content')
 {{-- Stats cards --}}
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
     <div class="card-mafia p-5">
         <p class="text-mafia-muted text-xs uppercase tracking-wider mb-1">Talents</p>
         <p class="text-3xl font-display text-mafia-red-bright">{{ $stats['talents'] }}</p>
@@ -21,6 +21,10 @@
         <p class="text-mafia-muted text-xs uppercase tracking-wider mb-1">Votes suspects</p>
         <p class="text-3xl font-display text-yellow-400">{{ $stats['votes_flagges'] }}</p>
     </div>
+    <a href="{{ route('admin.moderation') }}" class="card-mafia p-5 hover:border-mafia-gold/50 transition {{ $stats['en_attente'] > 0 ? 'border-mafia-gold/40' : '' }}">
+        <p class="text-mafia-muted text-xs uppercase tracking-wider mb-1">À modérer</p>
+        <p class="text-3xl font-display {{ $stats['en_attente'] > 0 ? 'text-mafia-gold' : 'text-mafia-muted' }}">{{ $stats['en_attente'] }}</p>
+    </a>
 </div>
 
 {{-- Actions rapides --}}
@@ -31,14 +35,16 @@
             {{ $parametres->votes_ouverts ? '🔒 Fermer les votes' : '🔓 Ouvrir les votes' }}
         </button>
     </form>
-    <a href="{{ route('admin.statistiques') }}" class="btn-mafia text-sm bg-transparent border-mafia-gold text-mafia-gold hover:bg-mafia-gold/10">
+    @if($stats['en_attente'] > 0)
+    <a href="{{ route('admin.moderation') }}" class="btn-mafia text-sm bg-transparent border-mafia-gold text-mafia-gold hover:bg-mafia-gold/10">
+        🛡 Modérer ({{ $stats['en_attente'] }})
+    </a>
+    @endif
+    <a href="{{ route('admin.statistiques') }}" class="btn-mafia text-sm bg-transparent border-mafia-border hover:border-mafia-gold">
         📊 Statistiques
     </a>
     <a href="{{ route('admin.export.csv') }}" class="btn-mafia text-sm bg-transparent border-mafia-border hover:border-mafia-gold">
         ⬇ CSV résultats
-    </a>
-    <a href="{{ route('admin.export.pdf') }}" class="btn-mafia text-sm bg-transparent border-mafia-border hover:border-mafia-gold">
-        ⬇ PDF résultats
     </a>
 </div>
 
@@ -92,8 +98,8 @@
                     <td class="p-3 text-mafia-muted font-mono text-xs">{{ $v->ip_address }}</td>
                     <td class="p-3">
                         <span class="text-xs px-2 py-0.5 rounded
-                            {{ $v->score_confiance >= 70 ? 'bg-green-900/30 text-green-400' :
-                               ($v->score_confiance >= 40 ? 'bg-yellow-900/30 text-yellow-400' : 'bg-red-900/30 text-red-400') }}">
+                            {{ ($v->score_confiance ?? 100) >= 70 ? 'bg-green-900/30 text-green-400' :
+                               (($v->score_confiance ?? 100) >= 40 ? 'bg-yellow-900/30 text-yellow-400' : 'bg-red-900/30 text-red-400') }}">
                             {{ $v->score_confiance ?? '—' }}
                         </span>
                     </td>

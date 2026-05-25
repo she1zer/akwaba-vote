@@ -4,10 +4,12 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\CandidatController;
 use App\Http\Controllers\Admin\ExportController;
+use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\ParametreController;
 use App\Http\Controllers\Admin\QrCodeController;
 use App\Http\Controllers\Admin\StatistiqueController;
 use App\Http\Controllers\Admin\TalentController;
+use App\Http\Controllers\CandidatureController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\ResultatController;
@@ -21,6 +23,9 @@ Route::post('/talent/{talent}/vote', [VoteController::class, 'store'])->name('vo
 Route::get('/resultats', [ResultatController::class, 'index'])->name('resultats');
 Route::get('/api/resultats', [ResultatController::class, 'api'])->name('resultats.api');
 Route::post('/candidat/{candidat}/reaction', [ReactionController::class, 'store'])->name('reaction.store');
+
+// Proposition de candidat par un voteur
+Route::post('/talent/{talent}/proposer-candidat', [CandidatureController::class, 'store'])->name('candidature.store');
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -39,10 +44,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('talents/{talent}/reset-votes', [ParametreController::class, 'resetTalentVotes'])
             ->name('talents.reset-votes');
 
-        // Candidats — routes spécifiques AVANT la resource pour éviter les conflits
+        // Candidats — routes spécifiques AVANT la resource
         Route::post('candidats/preview', [CandidatController::class, 'preview'])->name('candidats.preview');
         Route::post('candidats/{candidat}/toggle', [CandidatController::class, 'toggleActive'])->name('candidats.toggle');
         Route::resource('candidats', CandidatController::class)->except(['show']);
+
+        // Modération des candidatures spontanées
+        Route::get('moderation', [ModerationController::class, 'index'])->name('moderation');
+        Route::post('moderation/{candidat}/valider', [ModerationController::class, 'valider'])->name('moderation.valider');
+        Route::post('moderation/{candidat}/rejeter', [ModerationController::class, 'rejeter'])->name('moderation.rejeter');
+        Route::post('moderation/{candidat}/modifier', [ModerationController::class, 'modifier'])->name('moderation.modifier');
+        Route::delete('moderation/{candidat}', [ModerationController::class, 'supprimer'])->name('moderation.supprimer');
 
         // Paramètres
         Route::get('parametres', [ParametreController::class, 'edit'])->name('parametres.edit');

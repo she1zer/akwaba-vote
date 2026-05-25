@@ -15,13 +15,15 @@ class Talent extends Model
     protected $fillable = [
         'nom', 'description', 'icone_svg', 'votes_actifs',
         'ordre', 'couleur_hex', 'max_votes_par_ip',
+        'allow_candidature_spontanee',
     ];
 
     protected function casts(): array
     {
         return [
-            'votes_actifs' => 'boolean',
-            'max_votes_par_ip' => 'integer',
+            'votes_actifs'                => 'boolean',
+            'max_votes_par_ip'            => 'integer',
+            'allow_candidature_spontanee' => 'boolean',
         ];
     }
 
@@ -30,9 +32,22 @@ class Talent extends Model
         return $this->hasMany(Candidat::class)->orderBy('ordre')->orderBy('nom_complet');
     }
 
+    // Candidats validés et actifs — utilisé pour le vote public
     public function candidatsActifs(): HasMany
     {
-        return $this->hasMany(Candidat::class)->where('is_active', true)->orderBy('ordre')->orderBy('nom_complet');
+        return $this->hasMany(Candidat::class)
+            ->where('statut', 'valide')
+            ->where('is_active', true)
+            ->orderBy('ordre')
+            ->orderBy('nom_complet');
+    }
+
+    // Candidats en attente de validation admin
+    public function candidatsEnAttente(): HasMany
+    {
+        return $this->hasMany(Candidat::class)
+            ->where('statut', 'en_attente')
+            ->orderBy('propose_le');
     }
 
     public function votes(): HasMany

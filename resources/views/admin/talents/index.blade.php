@@ -22,6 +22,7 @@
                     <th class="p-3 text-left">Nom</th>
                     <th class="p-3 text-right">Candidats</th>
                     <th class="p-3 text-right">Votes</th>
+                    <th class="p-3 text-center">Propositions</th>
                     <th class="p-3 text-center">Statut</th>
                     <th class="p-3 text-center">Reset</th>
                     <th class="p-3"></th>
@@ -38,21 +39,32 @@
                             <form method="POST" action="{{ route('admin.talents.reorder', [$t, 'down']) }}">@csrf
                                 <button class="text-mafia-muted hover:text-white text-xs px-1">▼</button>
                             </form>
-                            <span class="text-mafia-muted text-xs ml-1">{{ $t->ordre }}</span>
                         </div>
                     </td>
                     <td class="p-3">
-                        <div class="w-5 h-5 rounded border border-mafia-border"
-                             style="background: {{ $t->couleur_hex ?? '#cc0000' }}"
-                             title="{{ $t->couleur_hex ?? '#cc0000' }}"></div>
+                        <div class="w-5 h-5 rounded border border-mafia-border" style="background: {{ $t->couleur_hex ?? '#cc0000' }}"></div>
                     </td>
-                    <td class="p-3 font-medium">{{ $t->nom }}
+                    <td class="p-3 font-medium">
+                        {{ $t->nom }}
                         @if($t->description)
                         <div class="text-xs text-mafia-muted">{{ \Illuminate\Support\Str::limit($t->description, 50) }}</div>
                         @endif
                     </td>
                     <td class="p-3 text-right text-mafia-muted">{{ $t->candidats_count }}</td>
                     <td class="p-3 text-right font-semibold text-mafia-red-bright">{{ $t->votes_count }}</td>
+                    <td class="p-3 text-center">
+                        @if($t->allow_candidature_spontanee)
+                            @if($t->en_attente_count > 0)
+                                <a href="{{ route('admin.moderation') }}" class="text-xs px-2 py-0.5 rounded border border-mafia-gold text-mafia-gold hover:bg-mafia-gold/10">
+                                    ⏳ {{ $t->en_attente_count }}
+                                </a>
+                            @else
+                                <span class="text-xs text-green-400">✓ activé</span>
+                            @endif
+                        @else
+                            <span class="text-xs text-mafia-muted">—</span>
+                        @endif
+                    </td>
                     <td class="p-3 text-center">
                         <span class="text-xs px-2 py-0.5 rounded border
                             {{ $t->votes_actifs ? 'border-green-700 text-green-400' : 'border-mafia-border text-mafia-muted' }}">
@@ -61,7 +73,7 @@
                     </td>
                     <td class="p-3 text-center">
                         <form method="POST" action="{{ route('admin.talents.reset-votes', $t) }}"
-                              onsubmit="return confirm('Réinitialiser TOUS les votes de {{ addslashes($t->nom) }} ? Cette action est irréversible.')">
+                              onsubmit="return confirm('Réinitialiser TOUS les votes de {{ addslashes($t->nom) }} ?')">
                             @csrf
                             <button type="submit" class="text-xs text-red-500 hover:text-red-300">Reset</button>
                         </form>
@@ -70,7 +82,7 @@
                         <div class="flex gap-2 justify-end">
                             <a href="{{ route('admin.talents.edit', $t) }}" class="text-mafia-muted hover:text-mafia-red-bright text-xs">Modifier</a>
                             <form method="POST" action="{{ route('admin.talents.destroy', $t) }}"
-                                  onsubmit="return confirm('Supprimer {{ addslashes($t->nom) }} et tous ses candidats ?')">
+                                  onsubmit="return confirm('Supprimer {{ addslashes($t->nom) }} ?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-mafia-muted hover:text-red-500 text-xs">Supprimer</button>
                             </form>
@@ -78,7 +90,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="p-6 text-center text-mafia-muted">Aucun talent</td></tr>
+                <tr><td colspan="9" class="p-6 text-center text-mafia-muted">Aucun talent</td></tr>
                 @endforelse
             </tbody>
         </table>

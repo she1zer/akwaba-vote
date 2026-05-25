@@ -18,10 +18,11 @@ class AdminController extends Controller
     {
         $parametres = Parametre::current();
         $stats = [
-            'talents'       => Talent::count(),
-            'candidats'     => Candidat::count(),
-            'votes'         => Vote::where('is_valid', true)->where('is_flagged', false)->count(),
-            'votes_flagges' => Vote::where('is_flagged', true)->count(),
+            'talents'          => Talent::count(),
+            'candidats'        => Candidat::where('statut', 'valide')->count(),
+            'votes'            => Vote::where('is_valid', true)->where('is_flagged', false)->count(),
+            'votes_flagges'    => Vote::where('is_flagged', true)->count(),
+            'en_attente'       => Candidat::where('statut', 'en_attente')->count(),
         ];
         $live = $this->resultats->hasRecentVotes();
         $recentVotes = Vote::with(['candidat', 'talent'])

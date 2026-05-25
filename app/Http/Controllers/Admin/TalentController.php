@@ -8,6 +8,7 @@ use App\Models\Talent;
 use App\Services\AdminLogger;
 use App\Services\ResultatService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TalentController extends Controller
@@ -18,6 +19,7 @@ class TalentController extends Controller
     {
         $talents = Talent::withCount('candidats')
             ->withCount(['votes as votes_count' => fn ($q) => $q->where('is_valid', true)->where('is_flagged', false)])
+            ->withCount(['candidatsEnAttente as en_attente_count'])
             ->orderBy('ordre')
             ->get();
 
@@ -31,7 +33,11 @@ class TalentController extends Controller
 
     public function store(TalentRequest $request): RedirectResponse
     {
-        $talent = Talent::query()->create($request->validated());
+        $data = $request->validated();
+        $data['votes_actifs']                = $request->boolean('votes_actifs');
+        $data['allow_candidature_spontanee'] = $request->boolean('allow_candidature_spontanee');
+
+        $talent = Talent::query()->create($data);
         AdminLogger::log('talent.create', $talent->nom);
         $this->resultats->clearCache();
 
@@ -45,7 +51,11 @@ class TalentController extends Controller
 
     public function update(TalentRequest $request, Talent $talent): RedirectResponse
     {
-        $talent->update($request->validated());
+        $data = $request->validated();
+        $data['votes_actifs']                = $request->boolean('votes_actifs');
+        $data['allow_candidature_spontanee'] = $request->boolean('allow_candidature_spontanee');
+
+        $talent->update($data);
         AdminLogger::log('talent.update', $talent->nom);
         $this->resultats->clearCache();
 
