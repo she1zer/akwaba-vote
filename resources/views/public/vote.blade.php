@@ -14,7 +14,7 @@
 @endif
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-    @foreach($talent->candidats as $candidat)
+    @foreach($talent->candidatsActifs as $candidat)
         <article class="card-mafia overflow-hidden">
             <div class="relative p-4">
                 <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 300 320" preserveAspectRatio="none" aria-hidden="true">

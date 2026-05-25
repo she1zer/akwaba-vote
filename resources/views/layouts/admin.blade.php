@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Admin') — AKWABA STIC 25</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('page-title', 'Admin') — AKWABA STIC 25</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -17,10 +18,15 @@
             <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.dashboard') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">Dashboard</a>
             <a href="{{ route('admin.talents.index') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.talents.*') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">Talents</a>
             <a href="{{ route('admin.candidats.index') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.candidats.*') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">Candidats</a>
+            <a href="{{ route('admin.statistiques') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.statistiques*') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">📊 Statistiques</a>
             <a href="{{ route('admin.parametres.edit') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.parametres.*') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">Paramètres</a>
             <a href="{{ route('admin.qrcode') }}" class="block px-3 py-2 rounded hover:bg-mafia-card {{ request()->routeIs('admin.qrcode') ? 'bg-mafia-card text-mafia-red-bright' : '' }}">QR Code</a>
-            <a href="{{ route('admin.export.csv') }}" class="block px-3 py-2 rounded hover:bg-mafia-card">Export CSV</a>
-            <a href="{{ route('admin.export.pdf') }}" class="block px-3 py-2 rounded hover:bg-mafia-card">Export PDF</a>
+            <div class="pt-2 border-t border-mafia-border mt-2">
+                <p class="text-mafia-muted text-xs px-3 mb-1 uppercase tracking-wider">Exports</p>
+                <a href="{{ route('admin.export.csv') }}" class="block px-3 py-2 rounded hover:bg-mafia-card text-mafia-muted hover:text-mafia-text">CSV résultats</a>
+                <a href="{{ route('admin.export.csv.bruts') }}" class="block px-3 py-2 rounded hover:bg-mafia-card text-mafia-muted hover:text-mafia-text">CSV votes bruts</a>
+                <a href="{{ route('admin.export.pdf') }}" class="block px-3 py-2 rounded hover:bg-mafia-card text-mafia-muted hover:text-mafia-text">PDF rapport</a>
+            </div>
         </nav>
         <form method="POST" action="{{ route('admin.logout') }}" class="p-4 border-t border-mafia-border">
             @csrf

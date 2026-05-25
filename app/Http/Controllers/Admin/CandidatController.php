@@ -37,10 +37,11 @@ class CandidatController extends Controller
 
     public function store(CandidatRequest $request): RedirectResponse
     {
-        // Photo optionnelle — on ne traite que si un fichier est fourni
-        $paths = $request->hasFile('photo')
-            ? $this->photos->store($request->file('photo'))
-            : ['photo' => null, 'photo_thumb' => null];
+        if ($request->hasFile('photo')) {
+            $paths = $this->photos->store($request->file('photo'));
+        } else {
+            $paths = ['photo' => null, 'photo_thumb' => null];
+        }
 
         $candidat = Candidat::query()->create([
             ...$request->safe()->except('photo'),

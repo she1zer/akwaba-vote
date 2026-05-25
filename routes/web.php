@@ -14,18 +14,15 @@ use App\Http\Controllers\ResultatController;
 use App\Http\Controllers\VoteController;
 use Illuminate\Support\Facades\Route;
 
-// ── Public ──────────────────────────────────────────────────────────────────
+// ── Public ───────────────────────────────────────────────────────────────────
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/talent/{talent}/vote', [VoteController::class, 'show'])->name('vote.show');
 Route::post('/talent/{talent}/vote', [VoteController::class, 'store'])->name('vote.store');
 Route::get('/resultats', [ResultatController::class, 'index'])->name('resultats');
 Route::get('/api/resultats', [ResultatController::class, 'api'])->name('resultats.api');
+Route::post('/candidat/{candidat}/reaction', [ReactionController::class, 'store'])->name('reaction.store');
 
-// Réactions (post-vote)
-Route::post('/candidat/{candidat}/reaction', [ReactionController::class, 'store'])
-    ->name('reaction.store');
-
-// ── Admin ────────────────────────────────────────────────────────────────────
+// ── Admin ─────────────────────────────────────────────────────────────────────
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AdminAuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AdminAuthController::class, 'login'])->name('login.submit');
@@ -39,18 +36,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('talents/{talent}/reorder/{direction}', [TalentController::class, 'reorder'])
             ->name('talents.reorder')
             ->where('direction', 'up|down');
+        Route::post('talents/{talent}/reset-votes', [ParametreController::class, 'resetTalentVotes'])
+            ->name('talents.reset-votes');
 
-        // Candidats
-        Route::resource('candidats', CandidatController::class)->except(['show']);
+        // Candidats — routes spécifiques AVANT la resource pour éviter les conflits
         Route::post('candidats/preview', [CandidatController::class, 'preview'])->name('candidats.preview');
         Route::post('candidats/{candidat}/toggle', [CandidatController::class, 'toggleActive'])->name('candidats.toggle');
+        Route::resource('candidats', CandidatController::class)->except(['show']);
 
         // Paramètres
         Route::get('parametres', [ParametreController::class, 'edit'])->name('parametres.edit');
         Route::put('parametres', [ParametreController::class, 'update'])->name('parametres.update');
         Route::post('votes/toggle', [ParametreController::class, 'toggleVotes'])->name('votes.toggle');
-        Route::post('talents/{talent}/reset-votes', [ParametreController::class, 'resetTalentVotes'])
-            ->name('talents.reset-votes');
 
         // QR Code
         Route::get('qrcode', [QrCodeController::class, 'show'])->name('qrcode');
